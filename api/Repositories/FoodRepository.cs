@@ -8,7 +8,7 @@ using api.Models;
 using apiRepositories;
 using AutoMapper;
 
-namespace api.Repositories 
+namespace api.Repositories
 {
     public class FoodRepository : GenericRepository<Food>, IFoodRepository
     {
@@ -19,6 +19,6 @@ namespace api.Repositories
         {
             _context = context;
             _mapper = mapper;
-        }    
+        }
     }
 }

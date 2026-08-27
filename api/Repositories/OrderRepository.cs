@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using api.Data;
 using api.Interfaces;
-using api.Migrations;
 using api.Models;
 using apiRepositories;
 using AutoMapper;
