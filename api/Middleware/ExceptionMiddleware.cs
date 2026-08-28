@@ -4,22 +4,22 @@ using System.Linq;
 using System.Net;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
-using api.Exeptions;
+using api.Exceptions;
 using Newtonsoft.Json;
 
-namespace api.Middleware 
+namespace api.Middleware
 {
     public class ExceptionMiddleware
     {
         private readonly RequestDelegate _next;
         private readonly ILogger<ExceptionMiddleware> _logger;
-        
+
         public ExceptionMiddleware(RequestDelegate next, ILogger<ExceptionMiddleware> logger)
         {
             this._next = next;
             this._logger = logger;
         }
-        
+
         public async Task InvokeAsync(HttpContext context)
         {
             try
@@ -32,7 +32,7 @@ namespace api.Middleware
                 await HandleExceptionAsync(context, ex);
             }
         }
-        
+
         private Task HandleExceptionAsync(HttpContext context, Exception ex)
         {
             context.Response.ContentType = "application/json";
@@ -42,7 +42,7 @@ namespace api.Middleware
                 ErrorType = "Failure",
                 ErrorMessage = ex.Message,
             };
-        
+
             switch (ex)
             {
                 case NotFoundException notFoundException:
@@ -56,12 +56,12 @@ namespace api.Middleware
                 default:
                     break;
             }
-        
+
             string response = JsonConvert.SerializeObject(errorDetails);
             context.Response.StatusCode = (int)statusCode;
             return context.Response.WriteAsync(response);
         }
-        
+
         public class ErrorDeatils
         {
             public string ErrorType { get; set; }

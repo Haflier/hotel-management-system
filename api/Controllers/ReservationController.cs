@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-namespace api.Controllers 
+namespace api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
@@ -18,7 +18,7 @@ namespace api.Controllers
         private readonly IMapper _mapper;
         private readonly UserManager<ApiUser> _userManager;
         public ReservationController(IReservationRepository reservationRepo, IMapper mapper
-                                        ,UserManager<ApiUser> userManager)
+                                        , UserManager<ApiUser> userManager)
         {
             _reservationRepo = reservationRepo;
             _mapper = mapper;
@@ -26,6 +26,7 @@ namespace api.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles = "Administrator")]
         public async Task<IActionResult> GetAll()
         {
             var reservationModels = await _reservationRepo.GetAllAsync();
@@ -39,6 +40,7 @@ namespace api.Controllers
         }
 
         [HttpGet("{id:int}")]
+        [Authorize]
         public async Task<IActionResult> Get(int id)
         {
             var reservationModel = await _reservationRepo.GetAsync(id);
@@ -94,10 +96,11 @@ namespace api.Controllers
                 return CreatedAtAction(nameof(Get), new { id = resultModel.Id }, reservation);
             }
 
-            return BadRequest();    
+            return BadRequest();
         }
 
         [HttpPut("{id:int}")]
+        [Authorize]
         public async Task<IActionResult> Put(int id, UpdateReservationRequestDto reservationDto)
         {
             if (id != reservationDto.Id) return BadRequest("Reservation Ids do not match");
@@ -126,7 +129,8 @@ namespace api.Controllers
             return NoContent();
         }
 
-        [HttpDelete("{id:int}")] 
+        [HttpDelete("{id:int}")]
+        [Authorize]
         public async Task<IActionResult> Delete(int id)
         {
             if (!await _reservationRepo.Exists(id))

@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using api.Configuration;
 using api.Data;
 using api.DTOs;
-using api.Exeptions;
+using api.Exceptions;
 using api.Interfaces;
 using AutoMapper;
 using Microsoft.AspNetCore.Http.HttpResults;

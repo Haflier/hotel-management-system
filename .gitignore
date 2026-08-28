@@ -60,6 +60,7 @@ appsettings.*.json
 !appsettings.*.sample.json
 
 # IDE
+.vscode/
 .idea/
 .vs/
 *.user

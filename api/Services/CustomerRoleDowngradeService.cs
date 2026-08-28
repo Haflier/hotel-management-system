@@ -3,6 +3,8 @@ using api.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
+namespace api.Services;
+
 public class CustomerRoleDowngradeService : BackgroundService
 {
     private readonly IServiceProvider _serviceProvider;
@@ -16,9 +18,11 @@ public class CustomerRoleDowngradeService : BackgroundService
         _logger = logger;
     }
 
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    protected override async Task ExecuteAsync(
+        CancellationToken stoppingToken)
     {
-        _logger.LogInformation("CustomerRoleDowngradeService started.");
+        _logger.LogInformation(
+            "CustomerRoleDowngradeService started.");
 
         while (!stoppingToken.IsCancellationRequested)
         {
@@ -27,65 +31,114 @@ public class CustomerRoleDowngradeService : BackgroundService
                 using var scope = _serviceProvider.CreateScope();
 
                 var userManager =
-                    scope.ServiceProvider.GetRequiredService<UserManager<ApiUser>>();
+                    scope.ServiceProvider
+                        .GetRequiredService<UserManager<ApiUser>>();
 
                 var dbContext =
-                    scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                    scope.ServiceProvider
+                        .GetRequiredService<ApplicationDbContext>();
 
-                // Get all users in "Customer" role
-                var customerRole = await dbContext.Roles
-                    .FirstOrDefaultAsync(r => r.Name == "Customer", stoppingToken);
+                var customerRole =
+                    await dbContext.Roles
+                        .SingleOrDefaultAsync(
+                            r => r.Name == "Customer",
+                            stoppingToken);
 
-                if (customerRole is not null)
+                if (customerRole == null)
                 {
-                    var customers = await dbContext.Users
-                        .Where(u => dbContext.UserRoles.Any(
-                            ur => ur.UserId == u.Id &&
-                                  ur.RoleId == customerRole.Id))
+                    _logger.LogWarning(
+                        "Customer role was not found.");
+
+                    await Task.Delay(
+                        TimeSpan.FromMinutes(5),
+                        stoppingToken);
+
+                    continue;
+                }
+
+                var customers =
+                    await dbContext.Users
+                        .Where(u =>
+                            dbContext.UserRoles.Any(
+                                ur =>
+                                    ur.UserId == u.Id &&
+                                    ur.RoleId == customerRole.Id))
                         .ToListAsync(stoppingToken);
 
-                    foreach (var customer in customers)
+                foreach (var customer in customers)
+                {
+                    var hasActiveReservation =
+                        await dbContext.Reservations
+                            .AnyAsync(
+                                r =>
+                                    r.ApiUserId == customer.Id &&
+                                    r.CheckOutDate >= DateTime.UtcNow,
+                                stoppingToken);
+
+                    if (hasActiveReservation)
+                        continue;
+
+                    if (!await userManager.IsInRoleAsync(
+                            customer,
+                            "Customer"))
                     {
-                        // Get the user's active reservations
-                        var activeReservations = await dbContext.Reservations
-                            .Where(r =>
-                                r.ApiUserId == customer.Id &&
-                                r.CheckOutDate >= DateTime.UtcNow)
-                            .ToListAsync(stoppingToken);
+                        continue;
+                    }
 
-                        // If no active/future reservations, downgrade role
-                        if (!activeReservations.Any())
+                    var removeResult =
+                        await userManager.RemoveFromRoleAsync(
+                            customer,
+                            "Customer");
+
+                    if (!removeResult.Succeeded)
+                    {
+                        foreach (var error in removeResult.Errors)
                         {
-                            if (await userManager.IsInRoleAsync(customer, "Customer"))
+                            _logger.LogError(
+                                "Failed to remove Customer role " +
+                                "from {Email}: {Code} - {Description}",
+                                customer.Email,
+                                error.Code,
+                                error.Description);
+                        }
+
+                        continue;
+                    }
+
+                    if (!await userManager.IsInRoleAsync(
+                            customer,
+                            "User"))
+                    {
+                        var addResult =
+                            await userManager.AddToRoleAsync(
+                                customer,
+                                "User");
+
+                        if (!addResult.Succeeded)
+                        {
+                            foreach (var error in addResult.Errors)
                             {
-                                var result = await userManager.RemoveFromRoleAsync(
-                                    customer,
-                                    "Customer");
-
-                                if (result.Succeeded)
-                                {
-                                    if (!await userManager.IsInRoleAsync(customer, "User"))
-                                    {
-                                        await userManager.AddToRoleAsync(
-                                            customer,
-                                            "User");
-                                    }
-
-                                    _logger.LogInformation(
-                                        "User {Email} demoted to User role.",
-                                        customer.Email);
-                                }
-                                else
-                                {
-                                    _logger.LogWarning(
-                                        "Failed to remove Customer role from {Email}: {Errors}",
-                                        customer.Email,
-                                        string.Join(", ", result.Errors.Select(e => e.Description)));
-                                }
+                                _logger.LogError(
+                                    "Failed to add User role to " +
+                                    "{Email}: {Code} - {Description}",
+                                    customer.Email,
+                                    error.Code,
+                                    error.Description);
                             }
+
+                            continue;
                         }
                     }
+
+                    _logger.LogInformation(
+                        "User {Email} demoted from Customer to User.",
+                        customer.Email);
                 }
+            }
+            catch (OperationCanceledException)
+                when (stoppingToken.IsCancellationRequested)
+            {
+                break;
             }
             catch (Exception ex)
             {
@@ -98,5 +151,8 @@ public class CustomerRoleDowngradeService : BackgroundService
                 TimeSpan.FromMinutes(5),
                 stoppingToken);
         }
+
+        _logger.LogInformation(
+            "CustomerRoleDowngradeService stopped.");
     }
 }

@@ -8,7 +8,6 @@ using api.Services;
 using apiRepositories;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
@@ -20,8 +19,6 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddControllers();
-builder.Services.AddSwaggerGen();
 
 builder.Services.AddControllers().AddNewtonsoftJson(Options =>
 {
@@ -40,7 +37,8 @@ builder.Services.AddIdentity<ApiUser, IdentityRole>(Options =>
     Options.Password.RequireUppercase = true;
     Options.Password.RequiredLength = 8;
 })
-.AddEntityFrameworkStores<ApplicationDbContext>();
+.AddEntityFrameworkStores<ApplicationDbContext>()
+.AddDefaultTokenProviders();
 
 builder.Services.AddAuthentication(Options =>
 {
@@ -153,9 +151,9 @@ app.UseSerilogRequestLogging();
 
 app.UseCors("AllowAll");
 
-app.MapControllers();
-
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.MapControllers();
 
 app.Run();
