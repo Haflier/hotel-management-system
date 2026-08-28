@@ -4,8 +4,9 @@ using api.Models;
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
 
-namespace api.Controllers 
+namespace api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
@@ -46,6 +47,7 @@ namespace api.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Administrator")]
         public async Task<IActionResult> Create([FromBody] CreateDrinkRequestDto drinkDto)
         {
             if (drinkDto == null) return BadRequest("Drink object is null");
@@ -56,6 +58,7 @@ namespace api.Controllers
         }
 
         [HttpPut("{id:int}")]
+        [Authorize(Roles = "Administrator")]
         public async Task<IActionResult> Put(int id, DrinkDto drinkDto)
         {
             if (id != drinkDto.Id) return BadRequest("Drink Ids do not match");
@@ -84,10 +87,11 @@ namespace api.Controllers
             return NoContent();
         }
 
-        [HttpDelete("{id:int}")] 
+        [HttpDelete("{id:int}")]
+        [Authorize(Roles = "Administrator")]
         public async Task<IActionResult> Delete(int id)
         {
-            if(!await _drinkRepo.Exists(id))
+            if (!await _drinkRepo.Exists(id))
             {
                 return NotFound("Drink not found.");
             }

@@ -7,7 +7,7 @@ using api.Models;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
-namespace api.Data 
+namespace api.Data
 {
     public class ApplicationDbContext : IdentityDbContext<ApiUser>
     {
@@ -41,11 +41,22 @@ namespace api.Data
                 .HasOne(r => r.Room)
                 .WithMany(r => r.RoomServices)
                 .HasForeignKey(p => p.RoomId);
-            
+
             builder.Entity<RoomService>()
                 .HasOne(s => s.Service)
                 .WithMany(r => r.RoomServices)
                 .HasForeignKey(p => p.ServiceId);
+
+            builder.Entity<Room>()
+                .Ignore(r => r.ReservedDates);
+
+            builder.Entity<Room>()
+                .Ignore(r => r.ActiveServices);
+
+            builder.Entity<Room>()
+                .Ignore(r => r.TotalPricePerDay);
+
+            SeedData.Seed(builder);
 
         }
     }

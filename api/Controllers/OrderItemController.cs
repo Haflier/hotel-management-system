@@ -6,8 +6,9 @@ using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
 
-namespace api.Controllers 
+namespace api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
@@ -29,6 +30,7 @@ namespace api.Controllers
         }
 
         [HttpGet("{id:int}")]
+        [Authorize(Policy = "CustomerPolicy")]
         public async Task<IActionResult> Get(int id)
         {
             var orderItem = await _orderItemRepo.GetAsync(id);
@@ -95,6 +97,7 @@ namespace api.Controllers
         }
 
         [HttpPut("{id:int}")]
+        [Authorize(Roles = "Administrator")]
         public async Task<IActionResult> Put(int id, UpdateOrderItemRequestDto orderItemDto)
         {
             if (id != orderItemDto.Id) return BadRequest("OrderItem Ids do not match");
@@ -123,7 +126,8 @@ namespace api.Controllers
             return NoContent();
         }
 
-        [HttpDelete("{id:int}")] 
+        [HttpDelete("{id:int}")]
+        [Authorize(Roles = "Administrator")]
         public async Task<IActionResult> Delete(int id)
         {
             if (!await _orderItemRepo.Exists(id))

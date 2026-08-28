@@ -2,8 +2,9 @@ using api.DTOs.Order;
 using api.Interfaces;
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
-namespace api.Controllers 
+namespace api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
@@ -18,6 +19,7 @@ namespace api.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles = "Administrator")]
         public async Task<IActionResult> GetAll()
         {
             var orderModels = await _orderRepo.GetAllDetails();
@@ -30,7 +32,8 @@ namespace api.Controllers
             return Ok(_mapper.Map<List<OrderDto>>(orderModels));
         }
 
-        [HttpGet("{id:int}")] 
+        [HttpGet("{id:int}")]
+        [Authorize(Policy = "CustomerPolicy")]
         public async Task<IActionResult> Get(int id)
         {
             var orderModel = await _orderRepo.GetDetail(id);
@@ -44,6 +47,7 @@ namespace api.Controllers
         }
 
         [HttpPost("{orderId}/finalize")]
+        [Authorize(Policy = "CustomerPolicy")]
         public async Task<IActionResult> FinalizeOrder(int orderId)
         {
             var orderModel = await _orderRepo.GetDetail(orderId);
@@ -62,8 +66,9 @@ namespace api.Controllers
             await _orderRepo.UpdateAsync(orderModel);
             return Ok(_mapper.Map<OrderDto>(orderModel));
         }
-        
-        [HttpDelete("{id:int}")] 
+
+        [HttpDelete("{id:int}")]
+        [Authorize(Roles = "Administrator")]
         public async Task<IActionResult> Delete(int id)
         {
             if (!await _orderRepo.Exists(id))

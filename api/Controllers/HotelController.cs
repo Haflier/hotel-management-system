@@ -8,8 +8,9 @@ using api.Models;
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
 
-namespace api.Controllers 
+namespace api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
@@ -63,6 +64,7 @@ namespace api.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Administrator")]
         public async Task<IActionResult> Create([FromBody] CreateHotelRequestDto hotelDto)
         {
             if (hotelDto == null) return BadRequest("Hotel object is null");
@@ -71,12 +73,13 @@ namespace api.Controllers
         }
 
         [HttpPut("{id}")]
+        [Authorize(Roles = "Administrator")]
         public async Task<IActionResult> PutHotel(int id, UpdateHotelRequestDto hotelDto)
         {
-            if(id != hotelDto.Id) return BadRequest("Hotel Ids do not match");
+            if (id != hotelDto.Id) return BadRequest("Hotel Ids do not match");
 
             var hotelModel = await _hotelRepo.GetAsync(id);
-            if(hotelModel == null) return BadRequest("Hotel not found");
+            if (hotelModel == null) return BadRequest("Hotel not found");
 
             _mapper.Map(hotelDto, hotelModel);
 
@@ -100,6 +103,7 @@ namespace api.Controllers
         }
 
         [HttpDelete("{id:int}")]
+        [Authorize(Roles = "Administrator")]
         public async Task<IActionResult> Delete([FromRoute] int id)
         {
             if (!await _hotelRepo.Exists(id))

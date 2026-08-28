@@ -8,8 +8,9 @@ using api.Models;
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
 
-namespace api.Controllers 
+namespace api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
@@ -63,6 +64,7 @@ namespace api.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Administrator")]
         public async Task<IActionResult> Create([FromBody] CreateRoomRequestDto roomDto)
         {
             var roomModel = await _roomRepo.AddAsync(_mapper.Map<Room>(roomDto));
@@ -71,6 +73,7 @@ namespace api.Controllers
         }
 
         [HttpPut("{id:int}")]
+        [Authorize(Roles = "Administrator")]
         public async Task<IActionResult> PutRoom(int id, RoomDto roomDto)
         {
             if (id != roomDto.Id) return BadRequest("Room Ids do not match");
@@ -100,6 +103,7 @@ namespace api.Controllers
         }
 
         [HttpDelete("{id:int}")]
+        [Authorize(Roles = "Administrator")]
         public async Task<IActionResult> Delete([FromRoute] int id)
         {
             var roomModel = await _roomRepo.Delete(id);
@@ -110,6 +114,7 @@ namespace api.Controllers
         }
 
         [HttpPost("{roomId}/services/{serviceId}")]
+        [Authorize(Policy = "CustomerPolicy")]
         public async Task<IActionResult> AddServiceToRoom(int roomId, int serviceId)
         {
             var roomService = await _roomRepo.AddServiceToRoomAsync(roomId, serviceId);
@@ -123,6 +128,7 @@ namespace api.Controllers
         }
 
         [HttpDelete("{roomId}/services/{serviceId}")]
+        [Authorize(Roles = "Administrator")]
         public async Task<IActionResult> RemoveServiceFromRoom(int roomId, int serviceId)
         {
             var roomService = await _roomRepo.RemoveServiceFromRoomAsync(roomId, serviceId);

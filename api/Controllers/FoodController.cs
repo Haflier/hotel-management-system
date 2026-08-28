@@ -4,8 +4,9 @@ using api.Models;
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
 
-namespace api.Controllers 
+namespace api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
@@ -47,16 +48,18 @@ namespace api.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Administrator")]
         public async Task<IActionResult> Create([FromBody] CreateFoodRequestDto foodDto)
         {
             if (foodDto == null) return BadRequest("Food object is null");
-            
+
             var foodModel = await _foodRepo.AddAsync(_mapper.Map<Food>(foodDto));
             var food = _mapper.Map<FoodDto>(foodModel);
             return CreatedAtAction(nameof(Get), new { id = foodModel.Id }, food);
         }
 
         [HttpPut("{id:int}")]
+        [Authorize(Roles = "Administrator")]
         public async Task<IActionResult> Put(int id, FoodDto foodDto)
         {
             if (id != foodDto.Id) return BadRequest("Food Ids do not match");
@@ -85,7 +88,8 @@ namespace api.Controllers
             return NoContent();
         }
 
-        [HttpDelete("{id:int}")] 
+        [HttpDelete("{id:int}")]
+        [Authorize(Roles = "Administrator")]
         public async Task<IActionResult> Delete(int id)
         {
             if (!await _foodRepo.Exists(id))

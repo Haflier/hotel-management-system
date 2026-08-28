@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
 
 namespace api.Controllers
 {
@@ -40,7 +41,7 @@ namespace api.Controllers
         }
 
         [HttpGet("{id:int}")]
-        [Authorize]
+        [Authorize(Policy = "CustomerPolicy")]
         public async Task<IActionResult> Get(int id)
         {
             var reservationModel = await _reservationRepo.GetAsync(id);
@@ -100,7 +101,7 @@ namespace api.Controllers
         }
 
         [HttpPut("{id:int}")]
-        [Authorize]
+        [Authorize(Roles = "Administrator")]
         public async Task<IActionResult> Put(int id, UpdateReservationRequestDto reservationDto)
         {
             if (id != reservationDto.Id) return BadRequest("Reservation Ids do not match");
@@ -130,7 +131,7 @@ namespace api.Controllers
         }
 
         [HttpDelete("{id:int}")]
-        [Authorize]
+        [Authorize(Roles = "Administrator")]
         public async Task<IActionResult> Delete(int id)
         {
             if (!await _reservationRepo.Exists(id))
