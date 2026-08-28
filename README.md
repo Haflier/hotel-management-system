@@ -122,69 +122,68 @@ The application can be run as a multi-container application using Docker Compose
 * Docker
 * Docker Compose
 
-### Configuration
+### 1. Configure environment variables
 
-Create the environment file from the provided example:
+Create `.env` from the example:
 
 ```bash
 cp .env.example .env
 ```
 
-Configure the required PostgreSQL credentials in `.env`.
+Set the PostgreSQL values in `.env`:
 
-> `.env` is ignored by Git.
+```env
+POSTGRES_DB=hotelapi
+POSTGRES_USER=your_username
+POSTGRES_PASSWORD=your_password
+```
 
-### Start the Application
-
-Build and start the containers:
+### 2. Build and start the application
 
 ```bash
 docker compose up --build -d
 ```
 
-Check the container status:
+This starts:
+
+* **Hotel API** — `http://localhost:8080`
+* **PostgreSQL** — port `5432`
+
+The API waits for PostgreSQL to become healthy before starting.
+
+### 3. Check containers
 
 ```bash
 docker compose ps
 ```
 
-The API and PostgreSQL containers should be running, with PostgreSQL reporting a healthy status.
-
-### Access the API
-
-API:
-
-```text
-http://localhost:8080
-```
-
-Swagger / OpenAPI:
-
-```text
-http://localhost:8080/swagger
-```
-
-### View Logs
-
-API logs:
+### 4. View API logs
 
 ```bash
-docker compose logs api
+docker compose logs -f api
 ```
 
 PostgreSQL logs:
 
 ```bash
-docker compose logs postgres
+docker compose logs -f postgres
 ```
 
-### Stop the Application
+### 5. Open Swagger
+
+Open:
+
+```text
+http://localhost:8080/swagger
+```
+
+### 6. Stop the application
 
 ```bash
 docker compose down
 ```
-
-PostgreSQL data and ASP.NET Core Data Protection keys are stored in Docker named volumes and persist when containers are recreated.
+```
+```
 
 ## Database Migrations
 
