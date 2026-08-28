@@ -93,11 +93,6 @@ builder.Services.AddSwaggerGen(option =>
     });
 });
 
-builder.Services.AddIdentityCore<ApiUser>()
-    .AddRoles<IdentityRole>()
-    .AddTokenProvider<DataProtectorTokenProvider<ApiUser>>("HotelManagementSystem")
-    .AddEntityFrameworkStores<ApplicationDbContext>();
-
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll",
@@ -142,18 +137,19 @@ builder.Services.AddScoped<IFactorRepository, FactorRepository>();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+using (var scope = app.Services.CreateScope())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    dbContext.Database.Migrate();
 }
+
+// Configure the HTTP request pipeline.
+app.UseSwagger();
+app.UseSwaggerUI();
 
 //app.UseMiddleware<ExceptionMiddleware>();
 
 app.UseSerilogRequestLogging();
-
-app.UseHttpsRedirection();
 
 app.UseCors("AllowAll");
 

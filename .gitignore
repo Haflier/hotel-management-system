@@ -64,3 +64,8 @@ appsettings.*.json
 .vs/
 *.user
 *.suo
+
+# Environment variables
+.env
+.env.*
+!.env.example
