@@ -1,38 +1,36 @@
-# HotelManagementSystem
+# Hotel Management System
 
-A hotel management REST API built with ASP.NET Core and PostgreSQL. The system handles hotel management, room reservations, food and drink orders, services, and invoice/factor generation.
+A hotel management REST API built with **ASP.NET Core** and **PostgreSQL**. The system provides hotel and room management, reservations, food and drink ordering, services, authentication and role-based authorization.
 
 ## Tech Stack
 
-- **ASP.NET Core Web API**
-- **Entity Framework Core**
-- **PostgreSQL**
-- **ASP.NET Core Identity**
-- **JWT Authentication**
-- **AutoMapper**
-- **Serilog**
-- **Swagger / OpenAPI**
-- **Docker & Docker Compose**
+* **ASP.NET Core Web API**
+* **Entity Framework Core**
+* **PostgreSQL**
+* **ASP.NET Core Identity**
+* **JWT Bearer Authentication**
+* **AutoMapper**
+* **Swagger / OpenAPI**
+* **Docker & Docker Compose**
 
 ## Features
 
-- User registration and authentication
-- JWT-based authorization
-- Role-based access control
-- Hotel and city management
-- Room management
-- Room reservations
-- Food and drink management
-- Service management
-- Order and order-item management
-- Automatic factor/invoice generation
-- Automatic customer role management
-- Centralized exception handling
-- Structured application logging
+* User registration and JWT authentication
+* Role-based authorization
+* Hotel and city management
+* Room management
+* Room reservations
+* Food and drink management
+* Room services
+* Orders and order items
+* Automatic factor generation
+* Automatic customer role management
+* Entity Framework Core migrations
+* PostgreSQL database running in Docker
 
 ## Architecture
 
-The application follows a layered architecture separating API controllers, business logic, data access, and domain models.
+The application uses a **layered architecture** that separates HTTP endpoints, application services, data access, and persistence.
 
 ```text
 Client
@@ -44,11 +42,10 @@ ASP.NET Core Web API
   │
   ├── Services
   │
-  ├── Repositories
-  │
-  ├── Entity Framework Core
-  │
-  └── ASP.NET Core Identity
+  └── Repositories
+          │
+          ▼
+   Entity Framework Core
           │
           ▼
       PostgreSQL
@@ -56,22 +53,52 @@ ASP.NET Core Web API
 
 ### Main Components
 
-- **Controllers** — Expose REST API endpoints.
-- **Services** — Handle background processing and application-level operations.
-- **Repositories** — Encapsulate database access.
-- **Entity Framework Core** — ORM and database interaction.
-- **ASP.NET Core Identity** — User and role management.
-- **JWT** — Stateless API authentication.
-- **PostgreSQL** — Persistent relational database.
-- **Serilog** — Structured application logging.
+* **Controllers** — Expose REST API endpoints and handle HTTP requests.
+* **Services** — Handle application-level and background operations.
+* **Repositories** — Encapsulate database access and persistence operations.
+* **Entity Framework Core** — Provides ORM functionality and database migrations.
+* **ASP.NET Core Identity** — Manages users, passwords, and roles.
+* **JWT** — Provides stateless authentication for API requests.
+* **PostgreSQL** — Stores application and Identity data.
 
-## Database Schema
+## Database
 
-The database contains entities for hotels, rooms, reservations, users, orders, services, and billing.
+The database contains entities for:
+
+* Cities
+* Hotels
+* Rooms
+* Reservations
+* Users
+* Food and drinks
+* Services
+* Orders and order items
+* Factors
+* Room-service relationships
 
 ![Database Schema](docs/database-schema.png)
 
-The schema is managed using Entity Framework Core migrations.
+The database schema is managed using **Entity Framework Core migrations**.
+
+## Authentication & Authorization
+
+The API uses **ASP.NET Core Identity** for user management and **JWT Bearer tokens** for API authentication.
+
+Three roles are supported:
+
+* **User** — Registered users who have not yet made a reservation.
+* **Customer** — Users who have made a reservation and can perform customer operations.
+* **Administrator** — Full administrative access to management operations.
+
+Authorization policies are used to restrict protected endpoints according to the user's role.
+
+Swagger includes Bearer authentication support, allowing authenticated endpoints to be tested directly from the Swagger UI.
+
+### Customer Role Lifecycle
+
+A newly registered account is assigned the `User` role.
+
+After creating a reservation, the account is promoted to the `Customer` role. A background service is responsible for customer-role lifecycle management.
 
 ## Docker
 
@@ -83,17 +110,17 @@ The application can be run as a multi-container application using Docker Compose
               ┌──────────┴──────────┐
               │                     │
               ▼                     ▼
-       ┌─────────────┐       ┌──────────────┐
+       ┌─────────────┐       ┌───────────────┐
        │  hotel-api  │──────▶│ hotel-postgres│
        │ ASP.NET Core│       │ PostgreSQL 18 │
        │    :8080    │       │    :5432      │
-       └─────────────┘       └──────────────┘
+       └─────────────┘       └───────────────┘
 ```
 
 ### Requirements
 
-- Docker
-- Docker Compose
+* Docker
+* Docker Compose
 
 ### Configuration
 
@@ -103,13 +130,13 @@ Create the environment file from the provided example:
 cp .env.example .env
 ```
 
-Set the required PostgreSQL credentials in `.env`.
+Configure the required PostgreSQL credentials in `.env`.
 
-> `.env` is ignored by Git and should not be committed.
+> `.env` is ignored by Git.
 
 ### Start the Application
 
-Build and start all containers:
+Build and start the containers:
 
 ```bash
 docker compose up --build -d
@@ -121,7 +148,7 @@ Check the container status:
 docker compose ps
 ```
 
-The PostgreSQL container should report `healthy` and the API should be `Up`.
+The API and PostgreSQL containers should be running, with PostgreSQL reporting a healthy status.
 
 ### Access the API
 
@@ -161,29 +188,19 @@ PostgreSQL data and ASP.NET Core Data Protection keys are stored in Docker named
 
 ## Database Migrations
 
-Entity Framework Core migrations are applied automatically when the API starts.
+Entity Framework Core migrations are applied automatically when the API starts:
 
-The database schema is therefore created automatically when running the application with Docker.
+```csharp
+dbContext.Database.Migrate();
+```
 
-Migration history is stored in:
+Migration history is maintained in:
 
 ```text
 __EFMigrationsHistory
 ```
 
-## API Authentication
-
-The API uses **ASP.NET Core Identity** for user and role management and **JWT Bearer tokens** for authentication.
-
-Authorization policies are defined for:
-
-- `User`
-- `Customer`
-- `Administrator`
-
-Protected endpoints require a valid JWT access token.
-
-Swagger includes Bearer authentication support for testing protected endpoints.
+This allows the PostgreSQL schema to be initialized and updated automatically when the application starts.
 
 ## Project Structure
 
@@ -194,7 +211,7 @@ HotelManagementSystem/
 │   ├── Configuration/
 │   ├── Controllers/
 │   ├── Data/
-│   ├── Exeptions/
+│   ├── Exceptions/
 │   ├── Interfaces/
 │   ├── Middleware/
 │   ├── Migrations/
@@ -216,7 +233,7 @@ HotelManagementSystem/
 
 ## Running Without Docker
 
-If you want to run the API directly with the .NET SDK:
+The API can also be run directly using the .NET SDK.
 
 ```bash
 cd api
@@ -224,8 +241,9 @@ dotnet restore
 dotnet run
 ```
 
-Make sure PostgreSQL is available and the `DefaultConnection` connection string is configured correctly.
+Make sure PostgreSQL is running and the `DefaultConnection` connection string is configured correctly.
 
 ## License
 
 This project is intended for educational and portfolio purposes.
+
