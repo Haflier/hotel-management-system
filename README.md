@@ -1,6 +1,6 @@
 # Hotel Management System
 
-A hotel management REST API built with **ASP.NET Core** and **PostgreSQL**. The system provides hotel and room management, reservations, food and drink ordering, services, authentication and role-based authorization.
+> **A hotel management REST API built with ASP.NET Core and PostgreSQL. The system provides hotel and room management, reservations, food and drink ordering, services, authentication and role-based authorization**
 
 ## Features
 
