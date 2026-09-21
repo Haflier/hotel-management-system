@@ -2,6 +2,16 @@
 
 A hotel management REST API built with **ASP.NET Core** and **PostgreSQL**. The system provides hotel and room management, reservations, food and drink ordering, services, authentication and role-based authorization.
 
+## Features
+
+* User registration and JWT authentication
+* Role-based authorization
+* Hotel, Room and city management
+* Orders and order items
+* Automatic factor generation
+* Automatic customer role management
+* PostgreSQL database running in Docker
+
 ## Tech Stack
 
 * **ASP.NET Core Web API**
@@ -12,21 +22,6 @@ A hotel management REST API built with **ASP.NET Core** and **PostgreSQL**. The 
 * **AutoMapper**
 * **Swagger / OpenAPI**
 * **Docker & Docker Compose**
-
-## Features
-
-* User registration and JWT authentication
-* Role-based authorization
-* Hotel and city management
-* Room management
-* Room reservations
-* Food and drink management
-* Room services
-* Orders and order items
-* Automatic factor generation
-* Automatic customer role management
-* Entity Framework Core migrations
-* PostgreSQL database running in Docker
 
 ## Architecture
 
@@ -61,20 +56,7 @@ ASP.NET Core Web API
 * **JWT** — Provides stateless authentication for API requests.
 * **PostgreSQL** — Stores application and Identity data.
 
-## Database
-
-The database contains entities for:
-
-* Cities
-* Hotels
-* Rooms
-* Reservations
-* Users
-* Food and drinks
-* Services
-* Orders and order items
-* Factors
-* Room-service relationships
+## Database schema
 
 ![Database Schema](docs/database-schema.png)
 
@@ -182,53 +164,6 @@ http://localhost:8080/swagger
 ```bash
 docker compose down
 ```
-```
-```
-
-## Database Migrations
-
-Entity Framework Core migrations are applied automatically when the API starts:
-
-```csharp
-dbContext.Database.Migrate();
-```
-
-Migration history is maintained in:
-
-```text
-__EFMigrationsHistory
-```
-
-This allows the PostgreSQL schema to be initialized and updated automatically when the application starts.
-
-## Project Structure
-
-```text
-HotelManagementSystem/
-│
-├── api/
-│   ├── Configuration/
-│   ├── Controllers/
-│   ├── Data/
-│   ├── Exceptions/
-│   ├── Interfaces/
-│   ├── Middleware/
-│   ├── Migrations/
-│   ├── Models/
-│   ├── Repositories/
-│   ├── Services/
-│   ├── Program.cs
-│   └── api.csproj
-│
-├── docs/
-│   └── database-schema.png
-│
-├── Dockerfile
-├── docker-compose.yml
-├── .env.example
-├── .gitignore
-└── README.md
-```
 
 ## Running Without Docker
 
@@ -245,4 +180,3 @@ Make sure PostgreSQL is running and the `DefaultConnection` connection string is
 ## License
 
 This project is intended for educational and portfolio purposes.
-
