@@ -22,6 +22,13 @@ namespace api.Repositories
             _context = context;
             _mapper = mapper;
         }
+        public async Task<List<Room>> GetAllAsync()
+        {
+            return await _context.Rooms
+                .Include(r => r.Reservations)
+                .ToListAsync();
+        }
+
         public async Task<Room> GetDetails(int? id)
         {
             var roomModel = await _context.Rooms

@@ -13,7 +13,7 @@ using api.DTOsa.Reservation;
 using api.Models;
 using AutoMapper;
 
-namespace api.Configuration 
+namespace api.Configuration
 {
     public class MapperConfig : Profile
     {
@@ -32,9 +32,27 @@ namespace api.Configuration
             CreateMap<ApiUser, AuthResponseDto>().ReverseMap();
             CreateMap<ApiUser, LoginDto>().ReverseMap();
 
-            CreateMap<Room, RoomDto>().ReverseMap();
-            CreateMap<Room, RoomBaseDto>().ReverseMap();
-            CreateMap<Room, RoomDetailDto>().ReverseMap();
+            CreateMap<Room, RoomDto>()
+                .ForMember(
+                    dest => dest.ReservedDates,
+                    opt => opt.MapFrom(src => GetReservedDates(src))
+                )
+                .ReverseMap();
+
+            CreateMap<Room, RoomBaseDto>()
+                .ForMember(
+                    dest => dest.ReservedDates,
+                    opt => opt.MapFrom(src => GetReservedDates(src))
+                )
+                .ReverseMap();
+
+            CreateMap<Room, RoomDetailDto>()
+                .ForMember(
+                    dest => dest.ReservedDates,
+                    opt => opt.MapFrom(src => GetReservedDates(src))
+                )
+                .ReverseMap();
+
             CreateMap<Room, CreateRoomRequestDto>().ReverseMap();
             CreateMap<Room, UpdateRoomRequestDto>().ReverseMap();
             CreateMap<Room, RoomForHotelDto>().ReverseMap();
@@ -50,7 +68,6 @@ namespace api.Configuration
             CreateMap<Reservation, ReservationDto>().ReverseMap();
             CreateMap<Reservation, ReservationBaseDto>().ReverseMap();
             CreateMap<Reservation, CreateReservationRequestDto>().ReverseMap();
-            CreateMap<Reservation, UpdateReservationRequestDto>().ReverseMap();
             CreateMap<Reservation, ReservationForRoomDto>().ReverseMap();
 
             CreateMap<Drink, DrinkDto>().ReverseMap();
@@ -76,6 +93,21 @@ namespace api.Configuration
             CreateMap<Factor, FactorBaseDto>().ReverseMap();
             CreateMap<Factor, CreateFactorRequestDto>().ReverseMap();
             CreateMap<Factor, UpdateFactorRequestDto>().ReverseMap();
+        }
+
+        private static List<DateTime> GetReservedDates(Room room)
+        {
+            return room.Reservations
+                .SelectMany(r =>
+                    Enumerable.Range(
+                        0,
+                        (r.CheckOutDate.Date - r.CheckinDate.Date).Days
+                    )
+                    .Select(i => r.CheckinDate.Date.AddDays(i))
+                )
+                .Distinct()
+                .OrderBy(d => d)
+                .ToList();
         }
     }
 }
