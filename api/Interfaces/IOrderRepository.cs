@@ -12,5 +12,6 @@ namespace api.Interfaces
         Task<ICollection<Order>> GetAllDetails();
         Task<Order> GetDetail(int orderId);
         Task<Order?> GetUserOrderDetail(int orderId, string userId);
+        Task<Order?> GetCurrentOrder(string userId);
     }
 }

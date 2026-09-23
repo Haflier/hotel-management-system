@@ -72,5 +72,14 @@ namespace api.Repositories
                     o.Id == orderId &&
                     o.ApiUserId == userId);
         }
+
+        public async Task<Order?> GetCurrentOrder(string userId)
+        {
+            return await _context.Orders
+                .Include(o => o.Items)
+                .FirstOrDefaultAsync(o =>
+                    o.ApiUserId == userId &&
+                    !o.IsFinalized);
+        }
     }
 }

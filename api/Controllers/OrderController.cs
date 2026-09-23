@@ -34,6 +34,23 @@ namespace api.Controllers
             return Ok(_mapper.Map<List<OrderDto>>(orderModels));
         }
 
+        [HttpGet("Current")]
+        [Authorize(Policy = "CustomerPolicy")]
+        public async Task<IActionResult> GetCurrent()
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized();
+
+            var orderModel = await _orderRepo.GetCurrentOrder(userId);
+
+            if (orderModel == null)
+                return NotFound("No active order found.");
+
+            return Ok(_mapper.Map<OrderDto>(orderModel));
+        }
+
         [HttpGet("{id:int}")]
         [Authorize(Policy = "CustomerPolicy")]
         public async Task<IActionResult> Get(int id)
