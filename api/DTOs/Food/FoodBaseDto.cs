@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace api.DTOs.Food 
+namespace api.DTOs.Food
 {
     public class FoodBaseDto
     {
@@ -11,5 +11,6 @@ namespace api.DTOs.Food
         public string Description { get; set; } = string.Empty;
         public decimal Price { get; set; }
         public string Meal { get; set; } = string.Empty;
+        public int HotelId { get; set; }
     }
 }

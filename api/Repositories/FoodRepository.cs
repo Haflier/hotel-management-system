@@ -7,6 +7,7 @@ using api.Interfaces;
 using api.Models;
 using apiRepositories;
 using AutoMapper;
+using Microsoft.EntityFrameworkCore;
 
 namespace api.Repositories
 {
@@ -19,6 +20,12 @@ namespace api.Repositories
         {
             _context = context;
             _mapper = mapper;
+        }
+        public async Task<List<Food>> GetByHotelIdAsync(int hotelId)
+        {
+            return await _context.Foods
+                .Where(f => f.HotelId == hotelId)
+                .ToListAsync();
         }
     }
 }

@@ -1,23 +1,23 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
-using System.Threading.Tasks;
 using api.Data;
 using api.Interfaces;
 using api.Models;
 using apiRepositories;
 using AutoMapper;
+using Microsoft.EntityFrameworkCore;
 
-namespace api.Repositories 
+namespace api.Repositories
 {
     public class OrderItemRepository : GenericRepository<OrderItem>, IOrderItemRepository
     {
         private readonly ApplicationDbContext _context;
         private readonly IMapper _mapper;
-        public OrderItemRepository(ApplicationDbContext context, IMapper mapper)
-        : base(context, mapper)
+
+        public OrderItemRepository(
+            ApplicationDbContext context,
+            IMapper mapper)
+            : base(context, mapper)
         {
             _context = context;
             _mapper = mapper;
@@ -27,15 +27,24 @@ namespace api.Repositories
         {
             using (var sha256 = SHA256.Create())
             {
-                // Hash input string
-                byte[] hash = sha256.ComputeHash(Encoding.UTF8.GetBytes(input));
+                byte[] hash = sha256.ComputeHash(
+                    Encoding.UTF8.GetBytes(input));
 
-                // Take first 8 bytes and convert to int (32-bit)
                 int value = BitConverter.ToInt32(hash, 0);
 
-                // Ensure it's positive
                 return Math.Abs(value);
             }
+        }
+
+        public async Task<OrderItem?> GetUserOrderItemAsync(
+            int orderItemId,
+            string userId)
+        {
+            return await _context.OrderItems
+                .Include(oi => oi.Order)
+                .FirstOrDefaultAsync(oi =>
+                    oi.Id == orderItemId &&
+                    oi.Order.ApiUserId == userId);
         }
     }
 }

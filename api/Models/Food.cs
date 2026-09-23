@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace api.Models 
+namespace api.Models
 {
     [Table("Food")]
     public class Food
@@ -11,5 +11,7 @@ namespace api.Models
         [Column(TypeName = "decimal(18, 2)")]
         public decimal Price { get; set; }
         public string Meal { get; set; } = string.Empty;
+        public int HotelId { get; set; }
+        public Hotel Hotel { get; set; } = null!;
     }
 }

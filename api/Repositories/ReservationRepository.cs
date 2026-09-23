@@ -54,5 +54,24 @@ namespace api.Repositories
                         .ToListAsync();
         }
 
+        public async Task<Reservation?> GetUserReservationAsync(
+            int reservationId,
+            string userId)
+        {
+            return await _context.Reservations
+                .Include(r => r.Room)
+                .FirstOrDefaultAsync(r =>
+                    r.Id == reservationId &&
+                    r.ApiUserId == userId);
+        }
+
+        public async Task<List<Reservation>> GetUserReservationsAsync(
+            string userId)
+        {
+            return await _context.Reservations
+                .Where(r => r.ApiUserId == userId)
+                .OrderByDescending(r => r.CheckinDate)
+                .ToListAsync();
+        }
     }
 }

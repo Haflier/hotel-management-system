@@ -1,8 +1,9 @@
+using System.Security.Claims;
 using api.DTOs.Order;
 using api.Interfaces;
 using AutoMapper;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
 namespace api.Controllers
 {
@@ -12,7 +13,10 @@ namespace api.Controllers
     {
         private readonly IOrderRepository _orderRepo;
         private readonly IMapper _mapper;
-        public OrderController(IOrderRepository orderRepo, IMapper mapper)
+
+        public OrderController(
+            IOrderRepository orderRepo,
+            IMapper mapper)
         {
             _orderRepo = orderRepo;
             _mapper = mapper;
@@ -25,9 +29,7 @@ namespace api.Controllers
             var orderModels = await _orderRepo.GetAllDetails();
 
             if (orderModels == null)
-            {
                 return NotFound();
-            }
 
             return Ok(_mapper.Map<List<OrderDto>>(orderModels));
         }
@@ -36,34 +38,42 @@ namespace api.Controllers
         [Authorize(Policy = "CustomerPolicy")]
         public async Task<IActionResult> Get(int id)
         {
-            var orderModel = await _orderRepo.GetDetail(id);
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized();
+
+            var orderModel = await _orderRepo.GetUserOrderDetail(id, userId);
 
             if (orderModel == null)
-            {
                 return NotFound("Order not found.");
-            }
 
             return Ok(_mapper.Map<OrderDto>(orderModel));
         }
 
-        [HttpPost("{orderId}/finalize")]
+        [HttpPost("{orderId:int}/finalize")]
         [Authorize(Policy = "CustomerPolicy")]
         public async Task<IActionResult> FinalizeOrder(int orderId)
         {
-            var orderModel = await _orderRepo.GetDetail(orderId);
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized();
+
+            var orderModel = await _orderRepo.GetUserOrderDetail(
+                orderId,
+                userId);
 
             if (orderModel == null)
-            {
                 return NotFound("Order not found.");
-            }
 
             if (orderModel.IsFinalized)
-            {
                 return BadRequest("Order is already finalized.");
-            }
 
             orderModel.IsFinalized = true;
+
             await _orderRepo.UpdateAsync(orderModel);
+
             return Ok(_mapper.Map<OrderDto>(orderModel));
         }
 
@@ -72,11 +82,10 @@ namespace api.Controllers
         public async Task<IActionResult> Delete(int id)
         {
             if (!await _orderRepo.Exists(id))
-            {
                 return NotFound("Order not found.");
-            }
 
             await _orderRepo.DeleteAsync(id);
+
             return NoContent();
         }
     }

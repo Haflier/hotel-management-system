@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations.Schema;
 
 
-namespace api.Models 
+namespace api.Models
 {
     [Table("Order")]
     public class Order
@@ -14,5 +14,7 @@ namespace api.Models
         public bool IsFinalized { get; set; }
         public string ApiUserId { get; set; }
         public ApiUser User { get; set; }
+        public int ReservationId { get; set; }
+        public Reservation Reservation { get; set; } = null!;
     }
 }

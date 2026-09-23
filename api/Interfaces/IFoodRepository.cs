@@ -4,10 +4,10 @@ using System.Linq;
 using System.Threading.Tasks;
 using api.Models;
 
-namespace api.Interfaces 
+namespace api.Interfaces
 {
     public interface IFoodRepository : IGenericRepository<Food>
     {
-        
+        Task<List<Food>> GetByHotelIdAsync(int hotelId);
     }
 }

@@ -9,7 +9,7 @@ using apiRepositories;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 
-namespace api.Repositories 
+namespace api.Repositories
 {
     public class OrderRepository : GenericRepository<Order>, IOrderRepository
     {
@@ -48,7 +48,7 @@ namespace api.Repositories
             }
 
             return orderModels;
-        }    
+        }
 
         public async Task<Order> GetDetail(int orderId)
         {
@@ -62,6 +62,15 @@ namespace api.Repositories
             }
 
             return orderModel;
+        }
+
+        public async Task<Order?> GetUserOrderDetail(int orderId, string userId)
+        {
+            return await _context.Orders
+                .Include(o => o.Items)
+                .FirstOrDefaultAsync(o =>
+                    o.Id == orderId &&
+                    o.ApiUserId == userId);
         }
     }
 }

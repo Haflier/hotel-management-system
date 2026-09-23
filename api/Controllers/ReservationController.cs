@@ -7,7 +7,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Authorization;
 
 namespace api.Controllers
 {
@@ -18,8 +17,11 @@ namespace api.Controllers
         private readonly IReservationRepository _reservationRepo;
         private readonly IMapper _mapper;
         private readonly UserManager<ApiUser> _userManager;
-        public ReservationController(IReservationRepository reservationRepo, IMapper mapper
-                                        , UserManager<ApiUser> userManager)
+
+        public ReservationController(
+            IReservationRepository reservationRepo,
+            IMapper mapper,
+            UserManager<ApiUser> userManager)
         {
             _reservationRepo = reservationRepo;
             _mapper = mapper;
@@ -33,98 +35,165 @@ namespace api.Controllers
             var reservationModels = await _reservationRepo.GetAllAsync();
 
             if (reservationModels == null)
-            {
                 return NotFound();
-            }
 
-            return Ok(_mapper.Map<IEnumerable<ReservationDto>>(reservationModels));
+            return Ok(
+                _mapper.Map<IEnumerable<ReservationDto>>(
+                    reservationModels));
+        }
+
+        [HttpGet("MyReservations")]
+        [Authorize]
+        public async Task<IActionResult> GetMyReservations()
+        {
+            var userId = User.FindFirstValue(
+                ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized();
+
+            var reservations =
+                await _reservationRepo.GetUserReservationsAsync(userId);
+
+            return Ok(
+                _mapper.Map<IEnumerable<ReservationDto>>(
+                    reservations));
         }
 
         [HttpGet("{id:int}")]
         [Authorize(Policy = "CustomerPolicy")]
         public async Task<IActionResult> Get(int id)
         {
-            var reservationModel = await _reservationRepo.GetAsync(id);
+            var userId = User.FindFirstValue(
+                ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized();
+
+            var reservationModel =
+                await _reservationRepo.GetUserReservationAsync(
+                    id,
+                    userId);
 
             if (reservationModel == null)
-            {
-                return NotFound("Reservation not found");
-            }
+                return NotFound("Reservation not found.");
 
-            return Ok(_mapper.Map<ReservationDto>(reservationModel));
+            return Ok(
+                _mapper.Map<ReservationDto>(
+                    reservationModel));
         }
 
         [HttpPost]
         [Authorize]
-        public async Task<IActionResult> Create([FromBody] CreateReservationRequestDto reservationDto)
+        public async Task<IActionResult> Create(
+            [FromBody] CreateReservationRequestDto reservationDto)
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var userId = User.FindFirstValue(
+                ClaimTypes.NameIdentifier);
 
             if (string.IsNullOrEmpty(userId))
                 return Unauthorized("User ID not found in token.");
 
-            var roomModel = await _reservationRepo.GetRoomAsync(reservationDto.RoomId);
-            if (roomModel == null) return BadRequest("Room not found");
+            var roomModel =
+                await _reservationRepo.GetRoomAsync(
+                    reservationDto.RoomId);
 
-            if (reservationDto.CheckOutDate < reservationDto.CheckinDate)
-                return BadRequest("End date must be greater than start date");
+            if (roomModel == null)
+                return BadRequest("Room not found.");
 
-            if (reservationDto.CheckinDate <= DateTime.Now)
-                return BadRequest("Start date must be greater than current date");
-
-            var overlappingReservations = await _reservationRepo.GetReservationsByRoomId(
-                reservationDto.RoomId, reservationDto.CheckinDate, reservationDto.CheckOutDate
-            );
-            if (overlappingReservations.Any())
-                return BadRequest("Some of the selected dates are already reserved.");
-
-            if (!(reservationDto.CheckOutDate < reservationDto.CheckinDate) && !(reservationDto.CheckinDate <= DateTime.Now)
-                && !overlappingReservations.Any())
+            if (reservationDto.CheckOutDate <=
+                reservationDto.CheckinDate)
             {
-                var reservationModel = _mapper.Map<Reservation>(reservationDto);
-                reservationModel.ApiUserId = userId;
-                reservationModel.PricePerDay = roomModel.BasePricePerDay;
-                var resultModel = await _reservationRepo.AddAsync(reservationModel);
-                var reservation = _mapper.Map<ReservationDto>(resultModel);
-
-                var user = await _userManager.GetUserAsync(User);
-                if (await _userManager.IsInRoleAsync(user, "User"))
-                {
-                    await _userManager.RemoveFromRoleAsync(user, "User");
-                    await _userManager.AddToRoleAsync(user, "Customer");
-                }
-
-                return CreatedAtAction(nameof(Get), new { id = resultModel.Id }, reservation);
+                return BadRequest(
+                    "End date must be greater than start date.");
             }
 
-            return BadRequest();
+            if (reservationDto.CheckinDate <= DateTime.Now)
+            {
+                return BadRequest(
+                    "Start date must be greater than current date.");
+            }
+
+            var overlappingReservations =
+                await _reservationRepo.GetReservationsByRoomId(
+                    reservationDto.RoomId,
+                    reservationDto.CheckinDate,
+                    reservationDto.CheckOutDate);
+
+            if (overlappingReservations.Any())
+            {
+                return BadRequest(
+                    "Some of the selected dates are already reserved.");
+            }
+
+            var reservationModel =
+                _mapper.Map<Reservation>(reservationDto);
+
+            reservationModel.ApiUserId = userId;
+            reservationModel.PricePerDay =
+                roomModel.BasePricePerDay;
+
+            var resultModel =
+                await _reservationRepo.AddAsync(
+                    reservationModel);
+
+            var reservation =
+                _mapper.Map<ReservationDto>(
+                    resultModel);
+
+            var user =
+                await _userManager.GetUserAsync(User);
+
+            if (user != null &&
+                await _userManager.IsInRoleAsync(user, "User"))
+            {
+                await _userManager.RemoveFromRoleAsync(
+                    user,
+                    "User");
+
+                await _userManager.AddToRoleAsync(
+                    user,
+                    "Customer");
+            }
+
+            return CreatedAtAction(
+                nameof(Get),
+                new { id = resultModel.Id },
+                reservation);
         }
 
         [HttpPut("{id:int}")]
         [Authorize(Roles = "Administrator")]
-        public async Task<IActionResult> Put(int id, UpdateReservationRequestDto reservationDto)
+        public async Task<IActionResult> Put(
+            int id,
+            UpdateReservationRequestDto reservationDto)
         {
-            if (id != reservationDto.Id) return BadRequest("Reservation Ids do not match");
+            if (id != reservationDto.Id)
+                return BadRequest(
+                    "Reservation Ids do not match.");
 
-            var reservationModel = await _reservationRepo.GetAsync(id);
-            if (reservationModel == null) return BadRequest("Reservation not found");
+            var reservationModel =
+                await _reservationRepo.GetAsync(id);
 
-            _mapper.Map(reservationDto, reservationModel);
+            if (reservationModel == null)
+                return NotFound(
+                    "Reservation not found.");
+
+            _mapper.Map(
+                reservationDto,
+                reservationModel);
 
             try
             {
-                await _reservationRepo.UpdateAsync(reservationModel);
+                await _reservationRepo.UpdateAsync(
+                    reservationModel);
             }
             catch (DbUpdateConcurrencyException)
             {
                 if (!await _reservationRepo.Exists(id))
-                {
                     return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
+
+                throw;
             }
 
             return NoContent();
@@ -135,11 +204,11 @@ namespace api.Controllers
         public async Task<IActionResult> Delete(int id)
         {
             if (!await _reservationRepo.Exists(id))
-            {
-                return NotFound("Reservation not found.");
-            }
+                return NotFound(
+                    "Reservation not found.");
 
             await _reservationRepo.DeleteAsync(id);
+
             return NoContent();
         }
     }

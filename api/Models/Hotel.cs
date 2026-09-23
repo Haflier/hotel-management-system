@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace api.Models 
+namespace api.Models
 {
     [Table("Hotel")]
     public class Hotel
@@ -12,8 +12,9 @@ namespace api.Models
         public string Address { get; set; } = string.Empty;
         public int CityId { get; set; }
         public City? City { get; set; }
-        public ICollection<Room> Rooms { get; set; }
-        public ICollection<Reservation> Reservations { get; set; }
-
+        public ICollection<Room> Rooms { get; set; } = new List<Room>();
+        public ICollection<Reservation> Reservations { get; set; } = new List<Reservation>();
+        public ICollection<Food> Foods { get; set; } = new List<Food>();
+        public ICollection<Drink> Drinks { get; set; } = new List<Drink>();
     }
 }
