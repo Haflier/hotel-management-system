@@ -114,7 +114,7 @@ namespace api.Controllers
             {
                 existingOrder = new Order
                 {
-                    CreatedAt = DateTime.Now,
+                    CreatedAt = DateTime.UtcNow,
                     ApiUserId = userId,
                     ReservationId = reservation.Id,
                     IsFinalized = false,

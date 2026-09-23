@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace api.Models 
+namespace api.Models
 {
     [Table("Reservation")]
     public class Reservation
@@ -10,7 +10,7 @@ namespace api.Models
         public DateTime CheckOutDate { get; set; }
         [Column(TypeName = "decimal(18, 2)")]
         public decimal PricePerDay { get; set; }
-        public int TotalNights => (CheckOutDate - CheckinDate).Days;
+        public int TotalNights => (CheckOutDate.Date - CheckinDate.Date).Days;
         [Column(TypeName = "decimal(18, 2)")]
         public decimal TotalPrice => TotalNights * PricePerDay;
         public DateTime CreatedAt { get; set; }

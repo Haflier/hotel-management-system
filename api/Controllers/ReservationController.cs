@@ -32,7 +32,8 @@ namespace api.Controllers
         [Authorize(Roles = "Administrator")]
         public async Task<IActionResult> GetAll()
         {
-            var reservationModels = await _reservationRepo.GetAllAsync();
+            var reservationModels =
+                await _reservationRepo.GetAllAsync();
 
             if (reservationModels == null)
                 return NotFound();
@@ -53,7 +54,8 @@ namespace api.Controllers
                 return Unauthorized();
 
             var reservations =
-                await _reservationRepo.GetUserReservationsAsync(userId);
+                await _reservationRepo.GetUserReservationsAsync(
+                    userId);
 
             return Ok(
                 _mapper.Map<IEnumerable<ReservationDto>>(
@@ -76,7 +78,8 @@ namespace api.Controllers
                     userId);
 
             if (reservationModel == null)
-                return NotFound("Reservation not found.");
+                return NotFound(
+                    "Reservation not found.");
 
             return Ok(
                 _mapper.Map<ReservationDto>(
@@ -92,23 +95,30 @@ namespace api.Controllers
                 ClaimTypes.NameIdentifier);
 
             if (string.IsNullOrEmpty(userId))
-                return Unauthorized("User ID not found in token.");
+                return Unauthorized(
+                    "User ID not found in token.");
 
             var roomModel =
                 await _reservationRepo.GetRoomAsync(
                     reservationDto.RoomId);
 
             if (roomModel == null)
-                return BadRequest("Room not found.");
+                return BadRequest(
+                    "Room not found.");
 
-            if (reservationDto.CheckOutDate <=
-                reservationDto.CheckinDate)
+            var checkinDate =
+                reservationDto.CheckinDate.UtcDateTime;
+
+            var checkOutDate =
+                reservationDto.CheckOutDate.UtcDateTime;
+
+            if (checkOutDate <= checkinDate)
             {
                 return BadRequest(
                     "End date must be greater than start date.");
             }
 
-            if (reservationDto.CheckinDate <= DateTime.Now)
+            if (checkinDate <= DateTime.UtcNow)
             {
                 return BadRequest(
                     "Start date must be greater than current date.");
@@ -117,8 +127,8 @@ namespace api.Controllers
             var overlappingReservations =
                 await _reservationRepo.GetReservationsByRoomId(
                     reservationDto.RoomId,
-                    reservationDto.CheckinDate,
-                    reservationDto.CheckOutDate);
+                    checkinDate,
+                    checkOutDate);
 
             if (overlappingReservations.Any())
             {
@@ -126,12 +136,14 @@ namespace api.Controllers
                     "Some of the selected dates are already reserved.");
             }
 
-            var reservationModel =
-                _mapper.Map<Reservation>(reservationDto);
-
-            reservationModel.ApiUserId = userId;
-            reservationModel.PricePerDay =
-                roomModel.BasePricePerDay;
+            var reservationModel = new Reservation
+            {
+                CheckinDate = checkinDate,
+                CheckOutDate = checkOutDate,
+                ApiUserId = userId,
+                PricePerDay = roomModel.BasePricePerDay,
+                CreatedAt = DateTime.UtcNow
+            };
 
             var resultModel =
                 await _reservationRepo.AddAsync(
@@ -145,7 +157,9 @@ namespace api.Controllers
                 await _userManager.GetUserAsync(User);
 
             if (user != null &&
-                await _userManager.IsInRoleAsync(user, "User"))
+                await _userManager.IsInRoleAsync(
+                    user,
+                    "User"))
             {
                 await _userManager.RemoveFromRoleAsync(
                     user,

@@ -120,8 +120,8 @@ namespace api.Repositories
 
             var claims = new List<Claim>
             {
-                new Claim(JwtRegisteredClaimNames.Sub, _user.Id), 
-                new Claim(ClaimTypes.NameIdentifier, _user.Id), 
+                new Claim(JwtRegisteredClaimNames.Sub, _user.Id),
+                new Claim(ClaimTypes.NameIdentifier, _user.Id),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                 new Claim(JwtRegisteredClaimNames.Email, _user.Email),
             }
@@ -131,7 +131,7 @@ namespace api.Repositories
                 issuer: _configuration["JWT:Issuer"],
                 audience: _configuration["JWT:Audience"],
                 claims: claims,
-                expires: DateTime.Now.AddMinutes(Convert.ToInt32(_configuration["JWT:DurationInMinutes"])),
+                expires: DateTime.UtcNow.AddMinutes(Convert.ToInt32(_configuration["JWT:DurationInMinutes"])),
                 signingCredentials: credentials
                 );
 
