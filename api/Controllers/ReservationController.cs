@@ -63,7 +63,7 @@ namespace api.Controllers
         }
 
         [HttpGet("{id:int}")]
-        [Authorize(Policy = "CustomerPolicy")]
+        [Authorize]
         public async Task<IActionResult> Get(int id)
         {
             var userId = User.FindFirstValue(
@@ -141,6 +141,7 @@ namespace api.Controllers
                 CheckinDate = checkinDate,
                 CheckOutDate = checkOutDate,
                 ApiUserId = userId,
+                RoomId = reservationDto.RoomId,
                 PricePerDay = roomModel.BasePricePerDay,
                 CreatedAt = DateTime.UtcNow
             };
