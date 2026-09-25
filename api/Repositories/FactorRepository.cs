@@ -1,24 +1,26 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using api.Data;
 using api.Interfaces;
 using api.Models;
 using apiRepositories;
 using AutoMapper;
+using Microsoft.EntityFrameworkCore;
 
-namespace api.Repositories 
+namespace api.Repositories
 {
     public class FactorRepository : GenericRepository<Factor>, IFactorRepository
     {
         private readonly ApplicationDbContext _context;
-        private readonly IMapper _mapper;
+
         public FactorRepository(ApplicationDbContext context, IMapper mapper)
-        : base(context, mapper)
+            : base(context, mapper)
         {
             _context = context;
-            _mapper = mapper;
+        }
+
+        public async Task<bool> ExistsByApiUserIdAsync(string apiUserId)
+        {
+            return await _context.Factors
+                .AnyAsync(f => f.ApiUserId == apiUserId);
         }
     }
 }

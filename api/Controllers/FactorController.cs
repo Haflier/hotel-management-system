@@ -52,9 +52,22 @@ namespace api.Controllers
         [Authorize(Roles = "Administrator")]
         public async Task<IActionResult> Create([FromBody] CreateFactorRequestDto factorDto)
         {
-            var factorModel = await _factorRepo.AddAsync(_mapper.Map<Factor>(factorDto));
+            if (await _factorRepo.ExistsByApiUserIdAsync(factorDto.ApiUserId))
+            {
+                return Conflict($"A factor already exists for API user '{factorDto.ApiUserId}'.");
+            }
+
+            var factorModel = await _factorRepo.AddAsync(
+                _mapper.Map<Factor>(factorDto)
+            );
+
             var factor = _mapper.Map<FactorDto>(factorModel);
-            return CreatedAtAction(nameof(Get), new { id = factorModel.Id }, factor);
+
+            return CreatedAtAction(
+                nameof(Get),
+                new { id = factorModel.Id },
+                factor
+            );
         }
 
         [HttpPut("{id:int}")]

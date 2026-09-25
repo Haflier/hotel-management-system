@@ -1,13 +1,9 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using api.Models;
 
-namespace api.Interfaces 
+namespace api.Interfaces
 {
     public interface IFactorRepository : IGenericRepository<Factor>
     {
-     
+        Task<bool> ExistsByApiUserIdAsync(string apiUserId);
     }
 }
