@@ -1,0 +1,13 @@
+@import "tailwindcss";
+
+@theme {
+  --color-ink: #1c1c1a;
+  --color-ivory: #f5f2eb;
+  --color-bronze: #9a7650;
+  --color-forest: #263b32;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+}

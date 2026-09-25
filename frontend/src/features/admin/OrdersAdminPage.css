@@ -1,0 +1,77 @@
+.orders-admin {
+  width: 100%;
+}
+
+.orders-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.orders-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: auto;
+}
+
+.orders-table th,
+.orders-table td {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  vertical-align: top;
+  white-space: nowrap;
+}
+
+.orders-table th {
+  font-weight: 600;
+}
+
+.orders-table tbody tr {
+  border-top: 1px solid currentColor;
+}
+
+.orders-user-id {
+  white-space: nowrap;
+}
+
+.orders-items {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  min-width: 280px;
+}
+
+.orders-items li {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.2rem 0;
+}
+
+.orders-item-name {
+  min-width: 0;
+}
+
+.orders-item-quantity,
+.orders-item-price {
+  flex-shrink: 0;
+}
+
+.orders-actions {
+  width: 1%;
+  white-space: nowrap;
+}
+
+.delete-order-button {
+  border: 0;
+  padding: 0;
+  background: none;
+  color: red;
+  text-decoration: underline;
+  cursor: pointer;
+  font: inherit;
+}
+
+.delete-order-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

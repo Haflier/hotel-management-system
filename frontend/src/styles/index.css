@@ -1,0 +1,18 @@
+.admin-delete-button {
+  border: 0;
+  padding: 0;
+  background: none;
+  color: red;
+  text-decoration: underline;
+  cursor: pointer;
+  font: inherit;
+}
+
+.admin-delete-button:hover {
+  color: darkred;
+}
+
+.admin-delete-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
