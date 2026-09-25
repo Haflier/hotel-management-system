@@ -96,7 +96,11 @@ namespace api.Configuration
 
             CreateMap<Factor, FactorDto>().ReverseMap();
             CreateMap<Factor, FactorBaseDto>().ReverseMap();
-            CreateMap<Factor, CreateFactorRequestDto>().ReverseMap();
+            CreateMap<CreateFactorRequestDto, Factor>()
+                .ForMember(
+                    dest => dest.CreatedAt,
+                    opt => opt.MapFrom(_ => DateTime.UtcNow)
+                );
             CreateMap<Factor, UpdateFactorRequestDto>().ReverseMap();
         }
 
