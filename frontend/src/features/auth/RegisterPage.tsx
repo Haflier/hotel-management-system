@@ -157,7 +157,7 @@ export function RegisterPage() {
           Already have an account?{" "}
           <Link
             to="/login"
-            className="text-blue-600 underline"
+            className="text-[#fb4100] underline"
           >
             Login
           </Link>

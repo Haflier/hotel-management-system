@@ -120,7 +120,7 @@ export function LoginPage() {
           Don't have an account?{" "}
           <Link
             to="/register"
-            className="text-blue-600 underline"
+            className="text-[#fb4100] underline"
           >
             Register
           </Link>
