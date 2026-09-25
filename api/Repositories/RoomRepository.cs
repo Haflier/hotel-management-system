@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -7,7 +6,6 @@ using api.Interfaces;
 using api.Models;
 using apiRepositories;
 using AutoMapper;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace api.Repositories
@@ -16,12 +14,16 @@ namespace api.Repositories
     {
         private readonly ApplicationDbContext _context;
         private readonly IMapper _mapper;
-        public RoomRepository(ApplicationDbContext context, IMapper mapper)
-        : base(context, mapper)
+
+        public RoomRepository(
+            ApplicationDbContext context,
+            IMapper mapper)
+            : base(context, mapper)
         {
             _context = context;
             _mapper = mapper;
         }
+
         public async Task<List<Room>> GetAllAsync()
         {
             return await _context.Rooms
@@ -32,14 +34,20 @@ namespace api.Repositories
         public async Task<Room> GetDetails(int? id)
         {
             var roomModel = await _context.Rooms
-                .Include(a => a.ActiveServices)
                 .Include(r => r.Reservations)
+                .Include(r => r.RoomServices)
+                    .ThenInclude(rs => rs.Service)
                 .FirstOrDefaultAsync(r => r.Id == id);
 
             if (roomModel == null)
             {
                 return null;
             }
+
+            roomModel.ActiveServices = roomModel.RoomServices
+                .Where(rs => rs.Service != null)
+                .Select(rs => rs.Service)
+                .ToList();
 
             return roomModel;
         }
@@ -47,7 +55,7 @@ namespace api.Repositories
         public async Task<Room> Delete(int? id)
         {
             var roomModel = await _context.Rooms
-                .Include(a => a.ActiveServices)
+                .Include(r => r.RoomServices)
                 .FirstOrDefaultAsync(r => r.Id == id);
 
             if (roomModel == null)
@@ -55,53 +63,69 @@ namespace api.Repositories
                 return null;
             }
 
-            _context.Services.RemoveRange(roomModel.ActiveServices);
+            _context.RoomServices.RemoveRange(roomModel.RoomServices);
             _context.Rooms.Remove(roomModel);
+
             await _context.SaveChangesAsync();
 
             return roomModel;
         }
 
-        public async Task<RoomService> AddServiceToRoomAsync(int roomId, int serviceId)
+        public async Task<RoomService> AddServiceToRoomAsync(
+            int roomId,
+            int serviceId)
         {
-            var roomModel = await _context.Rooms
-                .Include(a => a.ActiveServices)
-                .Include(r => r.Reservations)
-                .FirstOrDefaultAsync(r => r.Id == roomId);
+            var roomExists = await _context.Rooms
+                .AnyAsync(r => r.Id == roomId);
 
-            var service = await _context.Services.FindAsync(serviceId);
+            var serviceExists = await _context.Services
+                .AnyAsync(s => s.Id == serviceId);
 
-            if (roomModel != null && service != null && !roomModel.ActiveServices.Contains(service))
-            {
-                roomModel.ActiveServices.Add(service);
-                await _context.SaveChangesAsync();
-                return new RoomService { RoomId = roomModel.Id, ServiceId = service.Id };
-            }
-            else
+            if (!roomExists || !serviceExists)
             {
                 return null;
             }
+
+            var alreadyAssigned = await _context.RoomServices
+                .AnyAsync(rs =>
+                    rs.RoomId == roomId &&
+                    rs.ServiceId == serviceId);
+
+            if (alreadyAssigned)
+            {
+                return null;
+            }
+
+            var roomService = new RoomService
+            {
+                RoomId = roomId,
+                ServiceId = serviceId,
+            };
+
+            _context.RoomServices.Add(roomService);
+            await _context.SaveChangesAsync();
+
+            return roomService;
         }
 
-        public async Task<RoomService> RemoveServiceFromRoomAsync(int roomId, int serviceId)
+        public async Task<RoomService> RemoveServiceFromRoomAsync(
+            int roomId,
+            int serviceId)
         {
-            var roomModel = await _context.Rooms
-                .Include(a => a.ActiveServices)
-                .Include(r => r.Reservations)
-                .FirstOrDefaultAsync(r => r.Id == roomId);
+            var roomService = await _context.RoomServices
+                .FirstOrDefaultAsync(rs =>
+                    rs.RoomId == roomId &&
+                    rs.ServiceId == serviceId);
 
-            var service = roomModel?.ActiveServices.FirstOrDefault(s => s.Id == serviceId);
-
-            if (service != null)
-            {
-                roomModel?.ActiveServices.Remove(service);
-                await _context.SaveChangesAsync();
-                return new RoomService { RoomId = roomModel.Id, ServiceId = service.Id };
-            }
-            else
+            if (roomService == null)
             {
                 return null;
             }
+
+            _context.RoomServices.Remove(roomService);
+            await _context.SaveChangesAsync();
+
+            return roomService;
         }
     }
 }
