@@ -84,7 +84,12 @@ namespace api.Configuration
             CreateMap<OrderItem, OrderItemBaseDto>().ReverseMap();
             CreateMap<OrderItem, CreateOrderItemRequestDto>().ReverseMap();
             CreateMap<OrderItem, UpdateOrderItemRequestDto>().ReverseMap();
-            CreateMap<OrderItem, OrderItemForOrderDto>().ReverseMap();
+            CreateMap<OrderItem, OrderItemForOrderDto>()
+                .ForMember(dest => dest.FoodName,
+                    opt => opt.MapFrom(src => src.Food != null ? src.Food.Name : null))
+                .ForMember(dest => dest.DrinkName,
+                    opt => opt.MapFrom(src => src.Drink != null ? src.Drink.Name : null))
+                .ReverseMap();
 
             CreateMap<Order, OrderDto>().ReverseMap();
             CreateMap<Order, OrderBaseDto>().ReverseMap();

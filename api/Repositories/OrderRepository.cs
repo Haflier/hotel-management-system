@@ -15,8 +15,9 @@ namespace api.Repositories
     {
         private readonly ApplicationDbContext _context;
         private readonly IMapper _mapper;
+
         public OrderRepository(ApplicationDbContext context, IMapper mapper)
-        : base(context, mapper)
+            : base(context, mapper)
         {
             _context = context;
             _mapper = mapper;
@@ -26,7 +27,12 @@ namespace api.Repositories
         {
             var existingOrder = await _context.Orders
                 .Include(o => o.Items)
-                .FirstOrDefaultAsync(o => o.ApiUserId == userId && !o.IsFinalized);
+                    .ThenInclude(i => i.Food)
+                .Include(o => o.Items)
+                    .ThenInclude(i => i.Drink)
+                .FirstOrDefaultAsync(o =>
+                    o.ApiUserId == userId &&
+                    !o.IsFinalized);
 
             if (existingOrder == null)
             {
@@ -39,8 +45,11 @@ namespace api.Repositories
         public async Task<ICollection<Order>> GetAllDetails()
         {
             var orderModels = await _context.Orders
-            .Include(o => o.Items)
-            .ToListAsync();
+                .Include(o => o.Items)
+                    .ThenInclude(i => i.Food)
+                .Include(o => o.Items)
+                    .ThenInclude(i => i.Drink)
+                .ToListAsync();
 
             if (orderModels == null)
             {
@@ -54,6 +63,9 @@ namespace api.Repositories
         {
             var orderModel = await _context.Orders
                 .Include(o => o.Items)
+                    .ThenInclude(i => i.Food)
+                .Include(o => o.Items)
+                    .ThenInclude(i => i.Drink)
                 .FirstOrDefaultAsync(o => o.Id == orderId);
 
             if (orderModel == null)
@@ -68,6 +80,9 @@ namespace api.Repositories
         {
             return await _context.Orders
                 .Include(o => o.Items)
+                    .ThenInclude(i => i.Food)
+                .Include(o => o.Items)
+                    .ThenInclude(i => i.Drink)
                 .FirstOrDefaultAsync(o =>
                     o.Id == orderId &&
                     o.ApiUserId == userId);
@@ -77,6 +92,9 @@ namespace api.Repositories
         {
             return await _context.Orders
                 .Include(o => o.Items)
+                    .ThenInclude(i => i.Food)
+                .Include(o => o.Items)
+                    .ThenInclude(i => i.Drink)
                 .FirstOrDefaultAsync(o =>
                     o.ApiUserId == userId &&
                     !o.IsFinalized);
