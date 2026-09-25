@@ -27,6 +27,15 @@ namespace api.Controllers
             _mapper = mapper;
         }
 
+        [HttpGet]
+        [Authorize(Roles = "Administrator")]
+        public async Task<IActionResult> GetAll()
+        {
+            var drinks = await _drinkRepo.GetAllAsync();
+
+            return Ok(_mapper.Map<IEnumerable<DrinkDto>>(drinks));
+        }
+
         [HttpGet("ForReservation/{reservationId:int}")]
         [Authorize(Policy = "CustomerPolicy")]
         public async Task<IActionResult> GetForReservation(int reservationId)
